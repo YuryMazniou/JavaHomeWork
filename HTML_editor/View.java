@@ -5,6 +5,7 @@ import com.javarush.task.task32.task3209.listeners.TabbedPaneChangeListener;
 import com.javarush.task.task32.task3209.listeners.UndoListener;
 
 import javax.swing.*;
+import javax.swing.text.html.HTMLDocument;
 import javax.swing.undo.UndoManager;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -18,6 +19,24 @@ public class View extends JFrame implements ActionListener {
     private UndoManager undoManager=new UndoManager();
     private UndoListener undoListener=new UndoListener(undoManager);
 
+    public void showAbout(){
+        JOptionPane.showMessageDialog (null, "Message", "Title", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    public void update(){
+        HTMLDocument document=controller.getDocument();
+        htmlTextPane.setDocument(document);
+    }
+
+    public void selectHtmlTab(){
+        tabbedPane.setSelectedIndex(0);
+        resetUndo();
+    }
+
+    public boolean isHtmlTabSelected(){
+        if(tabbedPane.getSelectedIndex()==0)return true;
+        return false;
+    }
     public UndoListener getUndoListener() {
         return undoListener;
     }

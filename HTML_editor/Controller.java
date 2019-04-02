@@ -1,6 +1,7 @@
 package by.it.mazniou.HTML_editor;
 
 import javax.swing.text.html.HTMLDocument;
+import javax.swing.text.html.HTMLEditorKit;
 import java.io.File;
 
 public class Controller {
@@ -8,6 +9,17 @@ public class Controller {
     private HTMLDocument document; //модель
     private File currentFile;  //поле которое отвечает за файл, который сейчас открыт в нашем редакторе (текущий файл)
 
+    public HTMLDocument getDocument() {
+        return document;
+    }
+    public void resetDocument(){
+        if(document!=null){
+            document.removeUndoableEditListener(view.getUndoListener());  //Удалять у текущего документа слушателя правок
+        }
+        document= (HTMLDocument) new HTMLEditorKit().createDefaultDocument();
+        document.addUndoableEditListener(view.getUndoListener());
+        view.update();
+    }
     public Controller(View view) {
         this.view = view;
     }
