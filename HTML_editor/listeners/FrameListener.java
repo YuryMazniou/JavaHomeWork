@@ -1,6 +1,7 @@
 package by.it.mazniou.HTML_editor.listeners;
 
-import com.javarush.task.task32.task3209.View;
+
+import by.it.mazniou.HTML_editor.View;
 
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;

@@ -1,8 +1,9 @@
 package by.it.mazniou.HTML_editor;
 
-import com.javarush.task.task32.task3209.actions.*;
-import com.javarush.task.task32.task3209.listeners.TextEditMenuListener;
-import com.javarush.task.task32.task3209.listeners.UndoMenuListener;
+
+import by.it.mazniou.HTML_editor.actions.*;
+import by.it.mazniou.HTML_editor.listeners.TextEditMenuListener;
+import by.it.mazniou.HTML_editor.listeners.UndoMenuListener;
 
 import javax.swing.*;
 import javax.swing.text.DefaultEditorKit;

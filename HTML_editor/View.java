@@ -1,8 +1,9 @@
 package by.it.mazniou.HTML_editor;
 
-import com.javarush.task.task32.task3209.listeners.FrameListener;
-import com.javarush.task.task32.task3209.listeners.TabbedPaneChangeListener;
-import com.javarush.task.task32.task3209.listeners.UndoListener;
+
+import by.it.mazniou.HTML_editor.listeners.FrameListener;
+import by.it.mazniou.HTML_editor.listeners.TabbedPaneChangeListener;
+import by.it.mazniou.HTML_editor.listeners.UndoListener;
 
 import javax.swing.*;
 import javax.swing.text.html.HTMLDocument;
@@ -53,6 +54,14 @@ public class View extends JFrame implements ActionListener {
     }
     @Override
     public void actionPerformed(ActionEvent e) {
+        switch (e.getActionCommand()){
+            case "Новый":controller.createNewDocument();break;
+            case "Открыть":controller.openDocument();break;
+            case "Сохранить":controller.saveDocument();break;
+            case "Сохранить как...":controller.saveDocumentAs();break;
+            case "Выход":this.exit();break;
+            case "О программе":this.showAbout();break;
+        }
 
     }
     public View(){
@@ -108,5 +117,11 @@ public class View extends JFrame implements ActionListener {
         initEditor();
         pack();
     }
-    public void selectedTabChanged(){}
+    public void selectedTabChanged(){
+        switch (tabbedPane.getSelectedIndex()){
+            case 0:controller.setPlainText(plainTextPane.getText());break;
+            case 1:plainTextPane.setText(controller.getPlainText());break;
+        }
+        this.resetUndo();
+    }
 }
