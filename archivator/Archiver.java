@@ -1,6 +1,7 @@
 package by.it.mazniou.archivator;
 
-import com.javarush.task.task31.task3110.exception.WrongZipFileException;
+
+import by.it.mazniou.archivator.exception.WrongZipFileException;
 
 import java.io.IOException;
 

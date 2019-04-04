@@ -1,8 +1,8 @@
 package by.it.mazniou.archivator.command;
 
-import com.javarush.task.task31.task3110.ConsoleHelper;
-import com.javarush.task.task31.task3110.ZipFileManager;
-import com.javarush.task.task31.task3110.exception.PathIsNotFoundException;
+import by.it.mazniou.archivator.ConsoleHelper;
+import by.it.mazniou.archivator.ZipFileManager;
+import by.it.mazniou.archivator.exception.PathIsNotFoundException;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
