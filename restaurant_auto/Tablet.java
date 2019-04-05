@@ -3,6 +3,8 @@ package by.it.mazniou.restaurant_auto;
 import com.javarush.task.task27.task2712.ad.AdvertisementManager;
 import com.javarush.task.task27.task2712.ad.NoVideoAvailableException;
 import com.javarush.task.task27.task2712.kitchen.Order;
+import com.javarush.task.task27.task2712.statistic.StatisticManager;
+import com.javarush.task.task27.task2712.statistic.event.NoAvailableVideoEventDataRow;
 
 import java.io.IOException;
 import java.util.Observable;
@@ -26,7 +28,10 @@ public class Tablet extends Observable {
             if(!order.isEmpty()){
                 notifyObservers(order);
                 try{new AdvertisementManager(order.getTotalCookingTime()*60).processVideos();}
-                catch (NoVideoAvailableException e){logger.log(Level.INFO,String.format("No video is available for the order %s",order));}
+                catch (NoVideoAvailableException e){
+                    logger.log(Level.INFO,String.format("No video is available for the order %s",order));
+                    StatisticManager.getInstance().register(new NoAvailableVideoEventDataRow(order.getTotalCookingTime()*60));
+                }
             }
             return order;
         } catch (IOException e) {
