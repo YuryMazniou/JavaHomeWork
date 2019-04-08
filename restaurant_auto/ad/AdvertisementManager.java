@@ -7,119 +7,91 @@ import com.javarush.task.task27.task2712.statistic.StatisticManager;
 import com.javarush.task.task27.task2712.statistic.event.VideoSelectedEventDataRow;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
 public class AdvertisementManager {
-    private final AdvertisementStorage storage=AdvertisementStorage.getInstance();
-    private int timeSeconds; //время приготовления блюда
+    private int timeSeconds;
+    private final AdvertisementStorage storage = AdvertisementStorage.getInstance();
+    private List<Advertisement> bestCollection = new ArrayList<>();
+    private long bestPrice = 0;
+    private int bestDuration = 0;
+    private StatisticManager statisticManager = StatisticManager.getInstance();
 
-    private List<Advertisement> bestItems = null;
-    private long bestPrice;
 
     public AdvertisementManager(int timeSeconds) {
         this.timeSeconds = timeSeconds;
     }
     public void processVideos(){
-        if(storage.list().isEmpty())throw new NoVideoAvailableException();
+        /*подобрать список  Подобрать список видео из доступных, просмотр которых обеспечивает максимальную выгоду.*/
+        if (storage.list().isEmpty()){
+            throw new NoVideoAvailableException();
+        }
         List<Advertisement> list = new ArrayList<>();
-        for (Advertisement advertisement : storage.list()) {
-            if (advertisement.getHits() > 0)
+        for(Advertisement advertisement : storage.list()){
+            if(advertisement.getHits() > 0)
                 list.add(advertisement);
         }
-        getRecurs(list);
-        bestItems.sort(new Comparator<Advertisement>() {
+        recurse(list);
+        Collections.sort(bestCollection, new Comparator<Advertisement>() {
             @Override
             public int compare(Advertisement o1, Advertisement o2) {
-                int result = Long.compare(o1.getAmountPerOneDisplaying(), o2.getAmountPerOneDisplaying());
-                if (result != 0)
-                    return -result;
-
-                long oneSecondCost1 = o1.getAmountPerOneDisplaying() * 1000 / o1.getDuration();
-                long oneSecondCost2 = o2.getAmountPerOneDisplaying() * 1000 / o2.getDuration();
-
-                return Long.compare(oneSecondCost1, oneSecondCost2);
+                return (int)(o2.getAmountPerOneDisplaying() - o1.getAmountPerOneDisplaying());
             }
-        });
+        }.thenComparing(new Comparator<Advertisement>() {
+            @Override
+            public int compare(Advertisement o1, Advertisement o2) {
+                return (int)((o1.getAmountPerOneDisplaying()*1000)/o1.getDuration() - (o2.getAmountPerOneDisplaying()*1000)/o2.getDuration());
+            }
+        }));
+        statisticManager.register(new VideoSelectedEventDataRow(bestCollection,bestPrice,bestDuration));
+        for(Advertisement advertisement : bestCollection){
+
+            ConsoleHelper.writeMessage(advertisement.getName() + " is displaying... " + advertisement.getAmountPerOneDisplaying() + ", " + (advertisement.getAmountPerOneDisplaying()*1000)/advertisement.getDuration());
+            advertisement.revalidate();
+        }
+    }
+    private void recurse(List<Advertisement> list){
+
         if(!list.isEmpty()){
-            StatisticManager.getInstance().register(new VideoSelectedEventDataRow(list,calculatePriceVideos(list),calculateTimeVideos(list)));
-        }
-        for (int i = 0; i <bestItems.size(); i++) {
-            long a=bestItems.get(i).getAmountPerOneDisplaying();
-            int b= (int) (bestItems.get(i).getAmountPerOneDisplaying()*1.0/bestItems.get(i).getDuration()*1000);
-            ConsoleHelper.writeMessage(String.format("%s is displaying... %d, %d",bestItems.get(i).getName(),a,b));
-            bestItems.get(i).revalidate();
-        }
-    }
-
-    public void getRecurs(List<Advertisement> items)
-    {
-        if (items.size() > 0)
-            checkBestTimeItems(items);
-
-        for (int i = 0; i < items.size(); i++)
-        {
-            List<Advertisement> newList = new ArrayList<>(items);
-
-            newList.remove(i);
-
-            getRecurs(newList);
-        }
-
-    }
-    public void checkBestTimeItems(List<Advertisement>list){
-        if(bestItems==null){
-            if(calculateTimeVideos(list)<=timeSeconds){
-                bestItems=list;
-                bestPrice=calculatePriceVideos(list);
+            int resultDuration = 0;
+            long resultPrice = 0;
+            for(Advertisement advertisement : list){
+                resultDuration = resultDuration + advertisement.getDuration();
+                resultPrice = resultPrice + advertisement.getAmountPerOneDisplaying();
             }
-        }
-        else{
-            if(calculateTimeVideos(list)<=timeSeconds&&calculatePriceVideos(list)>bestPrice){
-                bestItems=list;
-                bestPrice=calculatePriceVideos(list);
-            }
-            if(calculateTimeVideos(list)<=timeSeconds&&calculatePriceVideos(list)==bestPrice){
-                if(calculateTimeVideos(list)>calculateTimeVideos(bestItems)){
-                    bestItems=list;
-                    bestPrice=calculatePriceVideos(list);
-                }
-                if(calculateTimeVideos(list)==calculateTimeVideos(bestItems)){
-                    if(calculateAllHits(list)<calculateAllHits(bestItems)){
-                        bestItems=list;
-                        bestPrice=calculatePriceVideos(list);
+            if(resultDuration <=timeSeconds && bestPrice <= resultPrice){
+                if(resultPrice == bestPrice && bestDuration <= resultDuration){
+                    if(bestDuration == resultDuration){
+                        if(list.size() < bestCollection.size()){
+                            bestCollection = list;
+                            bestPrice = resultPrice;
+                            bestDuration = resultDuration;
+                        }
+                    }else{
+                        bestCollection = list;
+                        bestPrice = resultPrice;
+                        bestDuration = resultDuration;
                     }
-                    else return;
                 }
-            }
-        }
-    }
-    public int calculateTimeVideos(List<Advertisement>list){
-        int allTime=0;
-        for (int i = 0; i <list.size(); i++) {
-            allTime+=list.get(i).getDuration();
-        }
-        return allTime;
-    }
-    public long calculatePriceVideos(List<Advertisement>list){
-        long allSumPrice=0;
-        for (int i = 0; i <list.size(); i++) {
-            allSumPrice+=list.get(i).getAmountPerOneDisplaying();
-        }
-        return allSumPrice;
-    }
-    public int calculateAllHits(List<Advertisement>list){
-        int allHitsSum=0;
-        for (int i = 0; i <list.size(); i++) {
-            allHitsSum+=list.get(i).getHits();
-        }
-        return allHitsSum;
-    }
+                else{
+                    bestCollection = list;
+                    bestPrice = resultPrice;
+                    bestDuration = resultDuration;
+                }
 
-    /*public static void main(String[] args) {
-        AdvertisementManager m=new AdvertisementManager(1000);
-        m.processVideos();
-    }*/
+
+
+            }
+            for(int i = 0; i < list.size(); i++){
+                List<Advertisement> newList = new ArrayList<>(list);
+                newList.remove(i);
+                recurse(newList);
+            }
+
+        }
+    }
 }
 
 /*2.2. Подобрать список видео из доступных, просмотр которых обеспечивает максимальную выгоду. (Пока делать не нужно, сделаем позже).

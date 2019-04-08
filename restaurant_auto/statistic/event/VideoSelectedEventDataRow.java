@@ -15,7 +15,7 @@ public class VideoSelectedEventDataRow implements EventDataRow {
         this.optimalVideoSet = optimalVideoSet;
         this.amount = amount;
         this.totalDuration = totalDuration;
-        this.currentDate=new Date();
+        this.currentDate=new Date();//((long) Math.abs(System.currentTimeMillis() - (Math.random()*10*100000000)));
     }
 
     public long getAmount() {

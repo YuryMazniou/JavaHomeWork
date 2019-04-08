@@ -1,12 +1,79 @@
 package by.it.mazniou.restaurant_auto;
 
-public class DirectorTablet {
-    public void printAdvertisementProfit(){
+import com.javarush.task.task27.task2712.ad.StatisticAdvertisementManager;
+import com.javarush.task.task27.task2712.statistic.StatisticManager;
 
+import java.text.SimpleDateFormat;
+import java.util.*;
+
+public class DirectorTablet {
+    private SimpleDateFormat sim=new SimpleDateFormat("dd-MMM-yyyy",Locale.ENGLISH);
+    /*какую сумму заработали на рекламе, сгруппировать по дням;*/
+    public void printAdvertisementProfit(){
+        TreeMap<Date,Double>map= (TreeMap<Date, Double>) StatisticManager.getInstance().getVideoToDatesInfo();
+        map.descendingMap();
+        double total=0.0;
+        for (Map.Entry<Date,Double>pair:map.entrySet()) {
+            if(pair.getValue()>0){
+                total+=pair.getValue();
+                ConsoleHelper.writeMessage(String.format(Locale.ENGLISH,"%s - %.2f",sim.format(pair.getKey()),pair.getValue()));
+            }
+        }
+        ConsoleHelper.writeMessage("Total - " + String.format(Locale.ENGLISH,"%.2f",total));
     }
-    public void printCookWorkloading(){}
-    public void printActiveVideoSet(){}
-    public void printArchivedVideoSet(){}
+    /*загрузка (рабочее время) повара, сгруппировать по дням;*/
+    public void printCookWorkloading(){
+        TreeMap<Date,TreeMap<String,Integer>>map= (TreeMap<Date, TreeMap<String, Integer>>) StatisticManager.getInstance().getCookWorkDateAndTime();
+        map.descendingMap();
+        for (Map.Entry<Date,TreeMap<String,Integer>>pair:map.entrySet()) {
+            ConsoleHelper.writeMessage(sim.format(pair.getKey()));
+            for (Map.Entry<String,Integer>both:pair.getValue().entrySet()) {
+                int work=0;
+                if(both.getValue()%60!=0)work=both.getValue()/60+1;
+                else work=both.getValue()/60;
+                ConsoleHelper.writeMessage(String.format("%s - %d min",both.getKey(),work));
+            }
+            ConsoleHelper.writeMessage("");
+        }
+    }
+    public void printActiveVideoSet(){
+        Map<String,Integer>map=StatisticAdvertisementManager.getInstance().getActiveVideoSet();
+        Map<String,Integer>mapEng=new TreeMap<>();
+        Map<String,Integer>mapRus=new TreeMap<>();
+        for (Map.Entry<String,Integer>pair:map.entrySet()) {
+            char c=pair.getKey().charAt(0);
+            if(((c >= 'a')&&(c <= 'z')) || ((c >= 'A')&&(c <= 'Z')))mapEng.put(pair.getKey(),pair.getValue());
+            else mapRus.put(pair.getKey(),pair.getValue());
+        }
+        for (Map.Entry<String,Integer>pair:mapEng.entrySet()) {
+            ConsoleHelper.writeMessage(String.format("%s - %d",pair.getKey(),pair.getValue()));
+        }
+        for (Map.Entry<String,Integer>pair:mapRus.entrySet()) {
+            ConsoleHelper.writeMessage(String.format("%s - %d",pair.getKey(),pair.getValue()));
+        }
+    }
+    public void printArchivedVideoSet(){
+        List<String>list=StatisticAdvertisementManager.getInstance().getArchivedVideoSet();
+        List<String>listEng=new ArrayList<>();
+        List<String>listRus=new ArrayList<>();
+        for (String s:list) {
+            char c=s.charAt(0);
+            if(((c >= 'a')&&(c <= 'z')) || ((c >= 'A')&&(c <= 'Z')))listEng.add(s);
+            else listRus.add(s);
+        }
+        Collections.sort(listEng);
+        Collections.sort(listRus);
+        for (String s:listEng) {
+            ConsoleHelper.writeMessage(s);
+        }
+        for (String s:listRus) {
+            ConsoleHelper.writeMessage(s);
+        }
+    }
+
+    /*public static void main(String[] args) {
+        new DirectorTablet().printAdvertisementProfit();
+    }*/
 }
 /*Давай подумаем что нужно сделать, чтобы директор мог посмотреть:
 1. какую сумму заработали на рекламе, сгруппировать по дням;

@@ -18,7 +18,7 @@ public class Advertisement{
         this.amountPerOneDisplaying = hits > 0 ? initialAmount / hits : 0;
     }
     public void revalidate(){
-        if(hits<=0)throw new UnsupportedOperationException();// throw new NoVideoAvailableException();
+        if(hits<=0)throw new NoVideoAvailableException();//throw new UnsupportedOperationException();
         hits--;
     }
 

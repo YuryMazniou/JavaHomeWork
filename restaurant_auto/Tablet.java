@@ -24,8 +24,8 @@ public class Tablet extends Observable {
         try {
             Order order=new Order(this);
             ConsoleHelper.writeMessage(order.toString());
-            setChanged();
             if(!order.isEmpty()){
+                setChanged();
                 notifyObservers(order);
                 try{new AdvertisementManager(order.getTotalCookingTime()*60).processVideos();}
                 catch (NoVideoAvailableException e){
