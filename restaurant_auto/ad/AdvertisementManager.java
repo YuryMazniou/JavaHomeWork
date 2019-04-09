@@ -2,9 +2,10 @@ package by.it.mazniou.restaurant_auto.ad;
 /* у каждого планшета будет свой объект менеджера, который будет подбирать оптимальный набор роликов и их последовательность для каждого заказа.
 Он также будет взаимодействовать с плеером и отображать ролики.*/
 
-import com.javarush.task.task27.task2712.ConsoleHelper;
-import com.javarush.task.task27.task2712.statistic.StatisticManager;
-import com.javarush.task.task27.task2712.statistic.event.VideoSelectedEventDataRow;
+
+import by.it.mazniou.restaurant_auto.ConsoleHelper;
+import by.it.mazniou.restaurant_auto.statistic.StatisticManager;
+import by.it.mazniou.restaurant_auto.statistic.event.VideoSelectedEventDataRow;
 
 import java.util.ArrayList;
 import java.util.Collections;

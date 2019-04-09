@@ -1,6 +1,6 @@
 package by.it.mazniou.restaurant_auto;
 
-import com.javarush.task.task27.task2712.kitchen.Dish;
+import by.it.mazniou.restaurant_auto.kitchen.Dish;
 
 import java.io.BufferedReader;
 import java.io.IOException;

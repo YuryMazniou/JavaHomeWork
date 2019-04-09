@@ -1,6 +1,6 @@
 package by.it.mazniou.restaurant_auto.kitchen;
 
-import com.javarush.task.task27.task2712.ConsoleHelper;
+import by.it.mazniou.restaurant_auto.ConsoleHelper;
 
 import java.util.Observable;
 import java.util.Observer;

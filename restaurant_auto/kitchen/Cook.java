@@ -1,26 +1,55 @@
 package by.it.mazniou.restaurant_auto.kitchen;
 
-import com.javarush.task.task27.task2712.ConsoleHelper;
-import com.javarush.task.task27.task2712.statistic.StatisticManager;
-import com.javarush.task.task27.task2712.statistic.event.CookedOrderEventDataRow;
+import by.it.mazniou.restaurant_auto.ConsoleHelper;
+import by.it.mazniou.restaurant_auto.statistic.StatisticManager;
+import by.it.mazniou.restaurant_auto.statistic.event.CookedOrderEventDataRow;
 
 import java.util.Observable;
 import java.util.Observer;
+import java.util.concurrent.LinkedBlockingQueue;
 
-public class Cook extends Observable implements Observer {
+public class Cook extends Observable implements Runnable{
     private String name;
+    private boolean busy;
+    private LinkedBlockingQueue<Order> queue;
 
     public Cook(String name) {
         this.name = name;
     }
 
     @Override
-    public void update(Observable observable, Object arg) {
-        Order order=(Order)arg;
-        ConsoleHelper.writeMessage(String.format("Start cooking - %s",arg));
-        StatisticManager.getInstance().register(new CookedOrderEventDataRow(observable.toString(),name,order.getTotalCookingTime()*60,order.getDishes()));
+    public void run() {
+        while (true){
+            if(!queue.isEmpty()){
+                if(!isBusy()){
+                    Order order=queue.poll();
+                    if(order!=null)startCookingOrder(order);
+                }
+            }
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {}
+        }
+    }
+
+    public void startCookingOrder(Order order){
+        busy=true;
+        ConsoleHelper.writeMessage(String.format("Start cooking - %s",order));
+        StatisticManager.getInstance().register(new CookedOrderEventDataRow(order.getTablet().toString(),name,order.getTotalCookingTime()*60,order.getDishes()));
         setChanged();
-        notifyObservers(arg);
+        notifyObservers(order);
+        try {
+            Thread.sleep(order.getTotalCookingTime()*10);
+        } catch (InterruptedException e) {}
+        busy=false;
+    }
+
+    public boolean isBusy() {
+        return busy;
+    }
+
+    public void setQueue(LinkedBlockingQueue<Order> queue) {
+        this.queue = queue;
     }
 
     @Override

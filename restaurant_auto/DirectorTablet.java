@@ -1,7 +1,7 @@
 package by.it.mazniou.restaurant_auto;
 
-import com.javarush.task.task27.task2712.ad.StatisticAdvertisementManager;
-import com.javarush.task.task27.task2712.statistic.StatisticManager;
+import by.it.mazniou.restaurant_auto.ad.StatisticAdvertisementManager;
+import by.it.mazniou.restaurant_auto.statistic.StatisticManager;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -10,6 +10,7 @@ public class DirectorTablet {
     private SimpleDateFormat sim=new SimpleDateFormat("dd-MMM-yyyy",Locale.ENGLISH);
     /*какую сумму заработали на рекламе, сгруппировать по дням;*/
     public void printAdvertisementProfit(){
+        ConsoleHelper.writeMessage("Сумма заработка на рекламе по дням");
         TreeMap<Date,Double>map= (TreeMap<Date, Double>) StatisticManager.getInstance().getVideoToDatesInfo();
         map.descendingMap();
         double total=0.0;
@@ -23,6 +24,7 @@ public class DirectorTablet {
     }
     /*загрузка (рабочее время) повара, сгруппировать по дням;*/
     public void printCookWorkloading(){
+        ConsoleHelper.writeMessage("Рабочее время поваров по дням:");
         TreeMap<Date,TreeMap<String,Integer>>map= (TreeMap<Date, TreeMap<String, Integer>>) StatisticManager.getInstance().getCookWorkDateAndTime();
         map.descendingMap();
         for (Map.Entry<Date,TreeMap<String,Integer>>pair:map.entrySet()) {
@@ -37,9 +39,10 @@ public class DirectorTablet {
         }
     }
     public void printActiveVideoSet(){
-        Map<String,Integer>map=StatisticAdvertisementManager.getInstance().getActiveVideoSet();
-        Map<String,Integer>mapEng=new TreeMap<>();
-        Map<String,Integer>mapRus=new TreeMap<>();
+        ConsoleHelper.writeMessage("Список оставшихся активных видео:");
+        Map<String,Integer>map= StatisticAdvertisementManager.getInstance().getActiveVideoSet();
+        Map<String,Integer>mapEng=new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        Map<String,Integer>mapRus=new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         for (Map.Entry<String,Integer>pair:map.entrySet()) {
             char c=pair.getKey().charAt(0);
             if(((c >= 'a')&&(c <= 'z')) || ((c >= 'A')&&(c <= 'Z')))mapEng.put(pair.getKey(),pair.getValue());
@@ -53,6 +56,7 @@ public class DirectorTablet {
         }
     }
     public void printArchivedVideoSet(){
+        ConsoleHelper.writeMessage("Список неактивных видео:");
         List<String>list=StatisticAdvertisementManager.getInstance().getArchivedVideoSet();
         List<String>listEng=new ArrayList<>();
         List<String>listRus=new ArrayList<>();
@@ -61,18 +65,20 @@ public class DirectorTablet {
             if(((c >= 'a')&&(c <= 'z')) || ((c >= 'A')&&(c <= 'Z')))listEng.add(s);
             else listRus.add(s);
         }
-        Collections.sort(listEng);
-        Collections.sort(listRus);
+        Collections.sort(listEng,String.CASE_INSENSITIVE_ORDER);
+        Collections.sort(listRus,String.CASE_INSENSITIVE_ORDER);
         for (String s:listEng) {
-            ConsoleHelper.writeMessage(s);
+            ConsoleHelper.writeMessage(s.trim());
         }
         for (String s:listRus) {
-            ConsoleHelper.writeMessage(s);
+            ConsoleHelper.writeMessage(s.trim());
         }
     }
 
     /*public static void main(String[] args) {
-        new DirectorTablet().printAdvertisementProfit();
+        //new DirectorTablet().printAdvertisementProfit();
+        new DirectorTablet().printActiveVideoSet();
+        new DirectorTablet().printArchivedVideoSet();
     }*/
 }
 /*Давай подумаем что нужно сделать, чтобы директор мог посмотреть:

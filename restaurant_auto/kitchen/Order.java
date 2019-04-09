@@ -1,9 +1,10 @@
 package by.it.mazniou.restaurant_auto.kitchen;
 
-import com.javarush.task.task27.task2712.ConsoleHelper;
-import com.javarush.task.task27.task2712.Tablet;
+import by.it.mazniou.restaurant_auto.ConsoleHelper;
+import by.it.mazniou.restaurant_auto.Tablet;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Order {
@@ -12,7 +13,9 @@ public class Order {
 
     public Order(Tablet tablet) throws IOException {
         this.tablet = tablet;
-        this.dishes=ConsoleHelper.getAllDishesForOrder();
+        dishes=new ArrayList<>();
+        initDishes();
+        //this.dishes=ConsoleHelper.getAllDishesForOrder();
     }
     public int getTotalCookingTime(){
         int result=0;
@@ -27,6 +30,14 @@ public class Order {
 
     public List<Dish> getDishes() {
         return dishes;
+    }
+
+    protected void initDishes() throws IOException {
+        this.dishes= ConsoleHelper.getAllDishesForOrder();
+    }
+
+    public Tablet getTablet() {
+        return tablet;
     }
 
     @Override

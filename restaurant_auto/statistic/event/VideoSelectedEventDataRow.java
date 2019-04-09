@@ -1,6 +1,6 @@
 package by.it.mazniou.restaurant_auto.statistic.event;
 
-import com.javarush.task.task27.task2712.ad.Advertisement;
+import by.it.mazniou.restaurant_auto.ad.Advertisement;
 
 import java.util.Date;
 import java.util.List;

@@ -1,19 +1,21 @@
 package by.it.mazniou.restaurant_auto;
 
-import com.javarush.task.task27.task2712.ad.AdvertisementManager;
-import com.javarush.task.task27.task2712.ad.NoVideoAvailableException;
-import com.javarush.task.task27.task2712.kitchen.Order;
-import com.javarush.task.task27.task2712.statistic.StatisticManager;
-import com.javarush.task.task27.task2712.statistic.event.NoAvailableVideoEventDataRow;
+
+import by.it.mazniou.restaurant_auto.ad.AdvertisementManager;
+import by.it.mazniou.restaurant_auto.ad.NoVideoAvailableException;
+import by.it.mazniou.restaurant_auto.kitchen.Order;
+import by.it.mazniou.restaurant_auto.kitchen.TestOrder;
+import by.it.mazniou.restaurant_auto.statistic.StatisticManager;
+import by.it.mazniou.restaurant_auto.statistic.event.NoAvailableVideoEventDataRow;
 
 import java.io.IOException;
-import java.util.Observable;
-import java.util.Observer;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class Tablet extends Observable {
+public class Tablet{
     final int number;
+    private LinkedBlockingQueue<Order> queue;
     private static Logger logger=Logger.getLogger(Tablet.class.getName());
 
     public Tablet(int number) {
@@ -25,8 +27,7 @@ public class Tablet extends Observable {
             Order order=new Order(this);
             ConsoleHelper.writeMessage(order.toString());
             if(!order.isEmpty()){
-                setChanged();
-                notifyObservers(order);
+                queue.add(order);
                 try{new AdvertisementManager(order.getTotalCookingTime()*60).processVideos();}
                 catch (NoVideoAvailableException e){
                     logger.log(Level.INFO,String.format("No video is available for the order %s",order));
@@ -39,25 +40,30 @@ public class Tablet extends Observable {
             return null;
         }
     }
+    public void createTestOrder(){
+        try {
+            TestOrder testOrder=new TestOrder(this);
+            ConsoleHelper.writeMessage(testOrder.toString());
+            if(!testOrder.isEmpty()){
+                queue.add(testOrder);
+                try{new AdvertisementManager(testOrder.getTotalCookingTime()*60).processVideos();}
+                catch (NoVideoAvailableException e){
+                    logger.log(Level.INFO,String.format("No video is available for the order %s",testOrder));
+                    StatisticManager.getInstance().register(new NoAvailableVideoEventDataRow(testOrder.getTotalCookingTime()*60));
+                }
+            }
+        } catch (IOException e) {
+            logger.log(Level.SEVERE,"Console is unavailable.");
+        }
+    }
+
+    public void setQueue(LinkedBlockingQueue<Order> queue) {
+        this.queue = queue;
+    }
+
     public int getNumber() {
         return number;
     }
-
-    @Override
-    public synchronized void addObserver(Observer o) {
-        super.addObserver(o);
-    }
-
-    @Override
-    public void notifyObservers(Object arg) {
-        super.notifyObservers(arg);
-    }
-
-    @Override
-    protected synchronized void setChanged() {
-        super.setChanged();
-    }
-
     @Override
     public String toString() {
         return "Tablet{" +

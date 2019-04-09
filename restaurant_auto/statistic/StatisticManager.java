@@ -1,10 +1,10 @@
 package by.it.mazniou.restaurant_auto.statistic;
 
-import com.javarush.task.task27.task2712.kitchen.Cook;
-import com.javarush.task.task27.task2712.statistic.event.CookedOrderEventDataRow;
-import com.javarush.task.task27.task2712.statistic.event.EventDataRow;
-import com.javarush.task.task27.task2712.statistic.event.EventType;
-import com.javarush.task.task27.task2712.statistic.event.VideoSelectedEventDataRow;
+
+import by.it.mazniou.restaurant_auto.statistic.event.CookedOrderEventDataRow;
+import by.it.mazniou.restaurant_auto.statistic.event.EventDataRow;
+import by.it.mazniou.restaurant_auto.statistic.event.EventType;
+import by.it.mazniou.restaurant_auto.statistic.event.VideoSelectedEventDataRow;
 
 import java.util.*;
 
@@ -12,8 +12,6 @@ import java.util.*;
 public class StatisticManager {
     private static volatile StatisticManager instance;
     private StatisticStorage statisticStorage=new StatisticStorage();
-    private Set<Cook>cooks=new HashSet<>();
-
     /*private static ArrayList<EventDataRow>listik=new ArrayList<>();
     {
         listik.add(new VideoSelectedEventDataRow(null,1105,1));
@@ -26,7 +24,6 @@ public class StatisticManager {
 
     }*/
     private StatisticManager(){}
-
     public static StatisticManager getInstance(){
         if(instance==null){
             synchronized (StatisticManager.class){
@@ -37,6 +34,7 @@ public class StatisticManager {
         }
         return instance;
     }
+
     public Map<Date, Double> getVideoToDatesInfo(){
         TreeMap<Date,Double>map=new TreeMap<>(Collections.reverseOrder());
         List<EventDataRow> list=statisticStorage.get(EventType.SELECTED_VIDEOS);
@@ -81,10 +79,6 @@ public class StatisticManager {
             }
         }
         return map;
-    }
-
-    public void register(Cook cook){
-        cooks.add(cook);
     }
     //будет регистрировать событие в хранилище.
     public void register(EventDataRow data){
