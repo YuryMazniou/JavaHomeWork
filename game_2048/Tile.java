@@ -17,10 +17,6 @@ public class Tile {
         this.value = value;
     }
 
-    public int getValue() {
-        return value;
-    }
-
     public boolean isEmpty(){
         return value == 0;
     }
