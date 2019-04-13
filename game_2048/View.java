@@ -3,6 +3,7 @@ package by.it.mazniou.game_2048;
 import javax.swing.*;
 import java.awt.*;
 
+//отображение отрисовывает нашу игру
 public class View extends JPanel {
     private static final Color BG_COLOR = new Color(0xbbada0);
     private static final String FONT_NAME = "Arial";

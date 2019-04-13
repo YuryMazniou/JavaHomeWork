@@ -35,7 +35,10 @@ public class Controller extends KeyAdapter {
     @Override
     public void keyPressed(KeyEvent e) {
         //super.keyPressed(e);
-        if(e.getKeyCode()==KeyEvent.VK_ESCAPE){resetGame();}
+        if(e.getKeyCode()==KeyEvent.VK_ESCAPE)resetGame();
+        if(e.getKeyCode()==KeyEvent.VK_Z)model.rollback();
+        if(e.getKeyCode()==KeyEvent.VK_R)model.randomMove();
+        if(e.getKeyCode()==KeyEvent.VK_A)model.autoMove();
         if(!model.canMove())view.isGameLost=true;
         if(!view.isGameLost&&!view.isGameWon) {
             if (e.getKeyCode() == KeyEvent.VK_DOWN) {

@@ -1,7 +1,6 @@
 package by.it.mazniou.game_2048;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 //будет содержать игровую логику и хранить игровое поле.
 public class Model {
@@ -9,11 +8,80 @@ public class Model {
     private Tile[][]gameTiles;
     protected int score;
     protected int maxTile;
+    private Stack<Tile[][]>previousStates=new Stack<>();
+    private Stack<Integer>previousScores=new Stack<>();
+    private boolean isSaveNeeded = true;
 
     public Model() {
         resetGameTiles();
     }
-
+    public void autoMove(){
+        PriorityQueue<MoveEfficiency>priorityQueue=new PriorityQueue<>(4,Collections.reverseOrder());
+        priorityQueue.add(getMoveEfficiency(this::left));
+        priorityQueue.add(getMoveEfficiency(this::right));
+        priorityQueue.add(getMoveEfficiency(this::up));
+        priorityQueue.add(getMoveEfficiency(this::down));
+        if(!priorityQueue.isEmpty())priorityQueue.peek().getMove().move();
+    }
+    public boolean hasBoardChanged(){
+        int resultGameTiles=0;
+        int resultLastGameTiles=0;
+        if(gameTiles!=null) {
+            for (int i = 0; i < gameTiles.length; i++) {
+                for (int j = 0; j < gameTiles[i].length; j++) {
+                    resultGameTiles += gameTiles[i][j].value;
+                }
+            }
+        }
+        if(!previousStates.isEmpty()) {
+            Tile[][] tile = previousStates.peek();
+            for (int i = 0; i <tile.length; i++) {
+                for (int j = 0; j <tile[i].length; j++) {
+                    resultLastGameTiles+=tile[i][j].value;
+                }
+            }
+        }
+        return resultGameTiles!=resultLastGameTiles;
+    }
+    public MoveEfficiency getMoveEfficiency(Move move){
+        MoveEfficiency back=new MoveEfficiency(getEmptyTiles().size(),score,move);
+        move.move();
+        MoveEfficiency now=new MoveEfficiency(getEmptyTiles().size(),score,move);
+        if(hasBoardChanged()) {
+            rollback();
+            return now;
+        }
+        else {
+            rollback();
+            return new MoveEfficiency(-1,0,move);
+        }
+    }
+    private void saveState(Tile[][] tile){
+        Tile[][]tileNew=new Tile[FIELD_WIDTH][FIELD_WIDTH];
+        for (int i = 0; i <tile.length; i++) {
+            for (int j = 0; j <tile[i].length; j++) {
+                Tile t=new Tile();
+                t.value=tile[i][j].value;
+                tileNew[i][j]=t;
+            }
+        }
+        previousStates.push(tileNew);
+        previousScores.push(score);
+        isSaveNeeded=false;
+    }
+    public void rollback(){
+        if(!previousScores.isEmpty()&&!previousStates.isEmpty()) {
+            gameTiles = previousStates.pop();
+            score = previousScores.pop();
+        }
+    }
+    public void randomMove(){
+        int n = ((int) (Math.random() * 100)) % 4;
+        if(n==0){left();}
+        if(n==1){right();}
+        if(n==2){up();}
+        if(n==3){down();}
+    }
     private void addTile(){
         List<Tile> list=getEmptyTiles();
         if(!list.isEmpty()){
@@ -75,15 +143,18 @@ public class Model {
         return result;
     }
     public void left(){
+        if(isSaveNeeded)saveState(gameTiles);
         boolean superResult=false;
         for (int i = 0; i <gameTiles.length; i++) {
             boolean result1=compressTiles(gameTiles[i]);
             boolean result2=mergeTiles(gameTiles[i]);
             if(result1||result2)superResult=true;
         }
+        isSaveNeeded=true;
         if(superResult)addTile();
     }
     public void right(){
+        saveState(gameTiles);
         quarterPastMove();
         quarterPastMove();
         left();
@@ -91,6 +162,7 @@ public class Model {
         quarterPastMove();
     }
     public void up(){
+        saveState(gameTiles);
         quarterPastMove();
         quarterPastMove();
         quarterPastMove();
@@ -98,6 +170,7 @@ public class Model {
         quarterPastMove();
     }
     public void down(){
+        saveState(gameTiles);
         quarterPastMove();
         left();
         quarterPastMove();
