@@ -1,4 +1,4 @@
-package by.it.mazniou.task_about_weight;
+package by.it.mazniou.tasks.task_about_weight;
 
 /* 
 Получи заданное число
