@@ -80,7 +80,7 @@ public abstract class BaseObject {
     }
 
     /**
-     * Проверяем - пересекаются ли переданный(o) и наш(this) объекты.
+     * Проверяем - пересекаются ли переданный(o) и наш(this) объекты.true если пересеклись
      */
     public boolean isIntersect(BaseObject o) {
         double dx = x - o.x;
