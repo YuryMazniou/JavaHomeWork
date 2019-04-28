@@ -1,7 +1,8 @@
 package by.it.mazniou.my_abstractfactory.female;
 
-import com.javarush.task.task37.task3702.AbstractFactory;
-import com.javarush.task.task37.task3702.Human;
+
+import by.it.mazniou.my_abstractfactory.AbstractFactory;
+import by.it.mazniou.my_abstractfactory.Human;
 
 public class FemaleFactory implements AbstractFactory {
     public Human getPerson(int age){

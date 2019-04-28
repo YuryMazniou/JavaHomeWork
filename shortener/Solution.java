@@ -54,8 +54,10 @@ public class Solution {
         OurHashMapStorageStrategy ourHashMapStorageStrategy=new OurHashMapStorageStrategy();
         testStrategy(ourHashMapStorageStrategy,10000);
         FileStorageStrategy fileStorageStrategy=new FileStorageStrategy();
-        testStrategy(fileStorageStrategy,5);
+        testStrategy(fileStorageStrategy,100);
         HashBiMapStorageStrategy str=new HashBiMapStorageStrategy();
         testStrategy(str,10000);
+        DualHashBidiMapStorageStrategy strat=new DualHashBidiMapStorageStrategy();
+        testStrategy(strat,10000);
     }
 }

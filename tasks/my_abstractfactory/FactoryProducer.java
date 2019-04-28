@@ -1,7 +1,8 @@
 package by.it.mazniou.my_abstractfactory;
 
-import com.javarush.task.task37.task3702.female.FemaleFactory;
-import com.javarush.task.task37.task3702.male.MaleFactory;
+
+import by.it.mazniou.my_abstractfactory.female.FemaleFactory;
+import by.it.mazniou.my_abstractfactory.male.MaleFactory;
 
 public class FactoryProducer {
     public static enum  HumanFactoryType{

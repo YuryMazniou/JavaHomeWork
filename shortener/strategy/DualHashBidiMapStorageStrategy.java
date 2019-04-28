@@ -1,9 +1,9 @@
 package by.it.mazniou.shortener.strategy;
 
-import com.google.common.collect.HashBiMap;
+import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 
-public class HashBiMapStorageStrategy implements StorageStrategy {
-    private HashBiMap<Long,String>data= HashBiMap.create();
+public class DualHashBidiMapStorageStrategy implements StorageStrategy {
+    private DualHashBidiMap<Long,String> data=new DualHashBidiMap<>();
     @Override
     public boolean containsKey(Long key) {
         return data.containsKey(key);
@@ -21,7 +21,7 @@ public class HashBiMapStorageStrategy implements StorageStrategy {
 
     @Override
     public Long getKey(String value) {
-        return data.inverse().get(value);
+        return data.getKey(value);
     }
 
     @Override

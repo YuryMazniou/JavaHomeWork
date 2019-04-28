@@ -1,6 +1,5 @@
 package by.it.mazniou.shortener;
 
-
 import by.it.mazniou.shortener.strategy.StorageStrategy;
 
 public class Shortener {

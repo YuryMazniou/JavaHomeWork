@@ -1,6 +1,7 @@
 package by.it.mazniou.my_abstractfactory.male;
 
-import com.javarush.task.task37.task3702.Human;
+
+import by.it.mazniou.my_abstractfactory.Human;
 
 public class Man implements Human {
     @Override

@@ -118,8 +118,10 @@ public class OurHashMapStorageStrategy implements StorageStrategy {
     @Override
     public Long getKey(String value) {
         Long key=null;
-        for (Entry e:table) {
-            if(e.value.equals(value))key=e.key;
+        for (int i = 0; i <table.length; i++) {
+            for (Entry e = table[i]; e != null; e = e.next) {
+                if(e.value.equals(value))key=e.key;
+            }
         }
         return key;
     }

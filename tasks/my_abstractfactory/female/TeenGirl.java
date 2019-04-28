@@ -1,6 +1,7 @@
 package by.it.mazniou.my_abstractfactory.female;
 
-import com.javarush.task.task37.task3702.Human;
+
+import by.it.mazniou.my_abstractfactory.Human;
 
 public class TeenGirl implements Human {
     public static final int MAX_AGE=19;
