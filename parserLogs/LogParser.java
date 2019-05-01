@@ -6,13 +6,18 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQuery {
     private Path logDir;
     private List<String> listLogs=new ArrayList<>();
     private List<ParserLog.User> listUsers;
     private Set<String>setResult;
+    private String pattern = "get (?<field1>\\w+) for (?<field2>\\w+) = \"(?<value1>.*?)\"";
 
     public LogParser(Path logDir) {
         this.logDir = logDir;
@@ -50,43 +55,272 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
 
     @Override
     public Set<Object> execute(String query) {
-        if(query.equals("get ip")){
-            Set<Object>map=new HashSet<>();
-            Set<String>set=getUniqueIPs(null,null);
-            for (String s:set) {
-                map.add(new String(s));
+        Set<Object>map=new HashSet<>();
+        switch (query){
+            case "get ip":{
+                Set<String>set=getUniqueIPs(null,null);
+                for (String s:set) {
+                    map.add(new String(s));
+                }
+                return map;
             }
-            return map;
+            case "get user":{
+                Set<String> set = getAllUsers();
+                for (String s : set) {
+                    map.add(new String(s));
+                }
+                return map;
+            }
+            case "get date":{
+                for (ParserLog.User u : listUsers) {
+                    map.add(u.getDate());
+                }
+                return map;
+            }
+            case "get event":{
+                for (ParserLog.User u : listUsers) {
+                    map.add(u.getEvent());
+                }
+                return map;
+            }
+            case "get status":{
+                for (ParserLog.User u : listUsers) {
+                    map.add(u.getStatus());
+                }
+                return map;
+            }
         }
-        if(query.equals("get user")){
-            Set<Object>map=new HashSet<>();
-            Set<String>set=getAllUsers();
-            for (String s:set) {
-                map.add(new String(s));
+        Matcher matcher = Pattern.compile(pattern).matcher(query);
+        if (matcher.find()) {
+            String value1 = matcher.group("value1").trim();
+            String field1 = matcher.group("field1").trim();
+            String field2 = matcher.group("field2").trim();
+            if(field1!=null&&field2!=null&&value1!=null){
+                map=getSetFinish(field1,field2,value1);
+                return map;
             }
-            return map;}
-        if(query.equals("get date")){
-            Set<Object>map=new HashSet<>();
-            for (ParserLog.User u:listUsers) {
-                map.add(u.getDate());
-            }
-            return map;
-        }
-        if(query.equals("get event")){
-            Set<Object>map=new HashSet<>();
-            for (ParserLog.User u:listUsers) {
-                map.add(u.getEvent());
-            }
-            return map;
-        }
-        if(query.equals("get status")){
-            Set<Object>map=new HashSet<>();
-            for (ParserLog.User u:listUsers) {
-                map.add(u.getStatus());
-            }
-            return map;
         }
         return null;
+    }
+    private Set<Object> getSetFinish(String field1,String field2,String value1){
+        Set<Object>map=new HashSet<>();
+        switch (field1){
+            case "ip":{
+                for (ParserLog.User u:listUsers) {
+                    switch (field2){
+                        case"user":{
+                            if(u.getUserName().equals(value1))map.add(new String(u.getIpAdress()));
+                            break;
+                        }
+                        case "date":{
+                            SimpleDateFormat dateFormat=new SimpleDateFormat();
+                            dateFormat.applyPattern("dd.MM.yyyy HH:mm:ss");
+                            Date dat = null;
+                            try {
+                                dat = dateFormat.parse(value1);
+                            } catch (ParseException e) {}
+                            if(u.getDate().equals(dat))map.add(new String(u.getIpAdress()));
+                            break;
+                        }
+                        case "event":{
+                            if(u.getEvent().name().equals(value1))map.add(new String(u.getIpAdress()));
+                            break;
+                        }
+                        case "status":{
+                            if(u.getStatus().name().equals(value1))map.add(new String(u.getIpAdress()));
+                            break;
+                        }
+                    }
+                }
+                break;
+            }
+            case "user":{
+                for (ParserLog.User u:listUsers) {
+                    switch (field2){
+                        case"ip":{
+                            if(u.getIpAdress().equals(value1))map.add(new String(u.getUserName()));
+                            break;
+                        }
+                        case "date":{
+                            SimpleDateFormat dateFormat=new SimpleDateFormat();
+                            dateFormat.applyPattern("dd.MM.yyyy HH:mm:ss");
+                            Date dat = null;
+                            try {
+                                dat = dateFormat.parse(value1);
+                            } catch (ParseException e) {}
+                            if(u.getDate().equals(dat))map.add(new String(u.getUserName()));
+                            break;
+                        }
+                        case "event":{
+                            if(u.getEvent().name().equals(value1))map.add(new String(u.getUserName()));
+                            break;
+                        }
+                        case "status":{
+                            if(u.getStatus().name().equals(value1))map.add(new String(u.getUserName()));
+                            break;
+                        }
+                    }
+                }
+                break;
+            }
+            case "date":{
+                for (ParserLog.User u:listUsers) {
+                    switch (field2){
+                        case"ip":{
+                            if(u.getIpAdress().equals(value1))map.add(u.getDate());
+                            break;
+                        }
+                        case "user":{
+                            if(u.getUserName().equals(value1))map.add(u.getDate());
+                            break;
+                        }
+                        case "event":{
+                            if(u.getEvent().name().equals(value1))map.add(u.getDate());
+                            break;
+                        }
+                        case "status":{
+                            if(u.getStatus().name().equals(value1))map.add(u.getDate());
+                            break;
+                        }
+                    }
+                }
+                break;
+            }
+            case "event":{
+                for (ParserLog.User u:listUsers) {
+                    switch (field2){
+                        case"ip":{
+                            if(u.getIpAdress().equals(value1))map.add(u.getEvent());
+                            break;
+                        }
+                        case "date":{
+                            SimpleDateFormat dateFormat=new SimpleDateFormat();
+                            dateFormat.applyPattern("dd.MM.yyyy HH:mm:ss");
+                            Date dat = null;
+                            try {
+                                dat = dateFormat.parse(value1);
+                            } catch (ParseException e) {}
+                            if(u.getDate().equals(dat))map.add(u.getEvent());
+                            break;
+                        }
+                        case "user":{
+                            if(u.getUserName().equals(value1))map.add(u.getEvent());
+                            break;
+                        }
+                        case "status":{
+                            if(u.getStatus().name().equals(value1))map.add(u.getEvent());
+                            break;
+                        }
+                    }
+                }
+                break;
+            }
+            case "status":{
+                for (ParserLog.User u:listUsers) {
+                    switch (field2){
+                        case"ip":{
+                            if(u.getIpAdress().equals(value1))map.add(u.getStatus());
+                            break;
+                        }
+                        case "date":{
+                            SimpleDateFormat dateFormat=new SimpleDateFormat();
+                            dateFormat.applyPattern("dd.MM.yyyy HH:mm:ss");
+                            Date dat = null;
+                            try {
+                                dat = dateFormat.parse(value1);
+                            } catch (ParseException e) {}
+                            if(u.getDate().equals(dat))map.add(u.getStatus());
+                            break;
+                        }
+                        case "user":{
+                            if(u.getUserName().equals(value1))map.add(u.getStatus());
+                            break;
+                        }
+                        case "event":{
+                            if(u.getEvent().name().equals(value1))map.add(u.getStatus());
+                            break;
+                        }
+                    }
+                }
+                break;
+            }
+        }
+        return map;
+    }
+    private Set<Object> getSet(String whatSend,Matcher m,String find){
+        Set<Object>map=new HashSet<>();
+        if(whatSend.equals("ip")){
+            String ip=m.group().replaceAll("\"","").trim();
+            for (ParserLog.User u:listUsers) {
+                if(u.getIpAdress().equals(ip)) {
+                    if(find.equals("ip"))map.add(new String(u.getIpAdress()));
+                    if(find.equals("user"))map.add(new String(u.getUserName()));
+                    if(find.equals("date"))map.add(u.getDate());
+                    if(find.equals("event"))map.add(u.getEvent());
+                    if(find.equals("status"))map.add(u.getStatus());
+                }
+            }
+            return map;
+        }
+        if(whatSend.equals("name")){
+            String name=m.group().replaceAll("\"","").trim();
+            for (ParserLog.User u:listUsers) {
+                if(u.getUserName().equals(name)){
+                    if(find.equals("ip"))map.add(new String(u.getIpAdress()));
+                    if(find.equals("user"))map.add(new String(u.getUserName()));
+                    if(find.equals("date"))map.add(u.getDate());
+                    if(find.equals("event"))map.add(u.getEvent());
+                    if(find.equals("status"))map.add(u.getStatus());
+                }
+            }
+            return map;
+        }
+        if(whatSend.equals("date")){
+            String date=m.group().replaceAll("\"","").trim();
+            SimpleDateFormat dateFormat=new SimpleDateFormat();
+            dateFormat.applyPattern("dd.MM.yyyy HH:mm:ss");
+            Date dat = null;
+            try {
+                dat = dateFormat.parse(date);
+            } catch (ParseException e) {}
+            for (ParserLog.User u:listUsers) {
+                if(u.getDate().equals(dat)){
+                    if(find.equals("ip"))map.add(new String(u.getIpAdress()));
+                    if(find.equals("user"))map.add(new String(u.getUserName()));
+                    if(find.equals("date"))map.add(u.getDate());
+                    if(find.equals("event"))map.add(u.getEvent());
+                    if(find.equals("status"))map.add(u.getStatus());
+                }
+            }
+            return map;
+        }
+        if(whatSend.equals("event")){
+            String event=m.group().replaceAll("\"","").trim();
+            for (ParserLog.User u:listUsers) {
+                if(u.getEvent().name().equals(event)){
+                    if(find.equals("ip"))map.add(new String(u.getIpAdress()));
+                    if(find.equals("user"))map.add(new String(u.getUserName()));
+                    if(find.equals("date"))map.add(u.getDate());
+                    if(find.equals("event"))map.add(u.getEvent());
+                    if(find.equals("status"))map.add(u.getStatus());
+                }
+            }
+            return map;
+        }
+        if(whatSend.equals("status")){
+            String status=m.group().replaceAll("\"","").trim();
+            for (ParserLog.User u:listUsers) {
+                if(u.getStatus().name().equals(status)){
+                    if(find.equals("ip"))map.add(new String(u.getIpAdress()));
+                    if(find.equals("user"))map.add(new String(u.getUserName()));
+                    if(find.equals("date"))map.add(u.getDate());
+                    if(find.equals("event"))map.add(u.getEvent());
+                    if(find.equals("status"))map.add(u.getStatus());
+                }
+            }
+            return map;
+        }
+        return map;
     }
 
     //загружаем все строки логов из файлов в список
@@ -94,9 +328,7 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
         List<String> listLogs = new ArrayList<>();
         try {
             listLogs = Files.readAllLines(entry.toPath());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        } catch (IOException e) {}
         return listLogs;
     }
     //должен возвращать количество уникальных IP адресов за выбранный период
