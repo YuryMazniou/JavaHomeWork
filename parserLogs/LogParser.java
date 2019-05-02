@@ -15,9 +15,10 @@ import java.util.regex.Pattern;
 public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQuery {
     private Path logDir;
     private List<String> listLogs=new ArrayList<>();
-    private List<ParserLog.User> listUsers;
+    private List<ParserLogMethodAndUsers.User> listUsers;
     private Set<String>setResult;
     private String pattern = "get (?<field1>\\w+) for (?<field2>\\w+) = \"(?<value1>.*?)\"";
+    private String patternWithDate = "get (?<field1>\\w+) for (?<field2>\\w+) = \"(?<value1>.*?)\" and date between \"(?<after>.*?)\" and \"(?<before>.*?)\"";
 
     public LogParser(Path logDir) {
         this.logDir = logDir;
@@ -27,9 +28,9 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
         }
     }
     private void parse(){
-        ParserLog parserLog = new ParserLog(listLogs);
-        parserLog.parseLines();
-        listUsers = parserLog.getUsers();
+        ParserLogMethodAndUsers parserLogMethodAndUsers = new ParserLogMethodAndUsers(listLogs);
+        parserLogMethodAndUsers.parseLines();
+        listUsers = parserLogMethodAndUsers.getUsers();
     }
     private List<String> processFilesFromFolder(List<String> logs, File file) {
         if(file.isFile() && file.getName().endsWith(".log")){
@@ -72,25 +73,45 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
                 return map;
             }
             case "get date":{
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     map.add(u.getDate());
                 }
                 return map;
             }
             case "get event":{
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     map.add(u.getEvent());
                 }
                 return map;
             }
             case "get status":{
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     map.add(u.getStatus());
                 }
                 return map;
             }
         }
-        Matcher matcher = Pattern.compile(pattern).matcher(query);
+        Matcher matcher = Pattern.compile(patternWithDate).matcher(query);
+        if (matcher.find()) {
+            String value1 = matcher.group("value1").trim();
+            String date1 = matcher.group("after").trim();
+            String date2 = matcher.group("before").trim();
+            String field1 = matcher.group("field1").trim();
+            String field2 = matcher.group("field2").trim();
+            if(field1!=null&&field2!=null&&value1!=null&&date1!=null&&date2!=null){
+                Date after=null;
+                Date before=null;
+                SimpleDateFormat dateFormat=new SimpleDateFormat();
+                dateFormat.applyPattern("dd.MM.yyyy HH:mm:ss");
+                try {
+                    after = dateFormat.parse(date1);
+                    before = dateFormat.parse(date2);
+                } catch (ParseException e) {}
+                map=getSetBetweenAfterAndBefore(field1,field2,value1,after,before);
+                return map;
+            }
+        }
+        matcher = Pattern.compile(pattern).matcher(query);
         if (matcher.find()) {
             String value1 = matcher.group("value1").trim();
             String field1 = matcher.group("field1").trim();
@@ -102,11 +123,156 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
         }
         return null;
     }
+    private Set<Object>getSetBetweenAfterAndBefore(String field1,String field2,String value1,Date after,Date before){
+        Set<Object>map=new HashSet<>();
+        switch (field1){
+            case "ip":{
+                for (ParserLogMethodAndUsers.User u:listUsers) {
+                    switch (field2){
+                        case"user":{
+                            if(u.getUserName().equals(value1)&&u.getDate().before(before)&&u.getDate().after(after))map.add(new String(u.getIpAdress()));
+                            break;
+                        }
+                        case "date":{
+                            SimpleDateFormat dateFormat=new SimpleDateFormat();
+                            dateFormat.applyPattern("dd.MM.yyyy HH:mm:ss");
+                            Date dat = null;
+                            try {
+                                dat = dateFormat.parse(value1);
+                            } catch (ParseException e) {}
+                            if(u.getDate().equals(dat)&&u.getDate().before(before)&&u.getDate().after(after))map.add(new String(u.getIpAdress()));
+                            break;
+                        }
+                        case "event":{
+                            if(u.getEvent().name().equals(value1)&&u.getDate().before(before)&&u.getDate().after(after))map.add(new String(u.getIpAdress()));
+                            break;
+                        }
+                        case "status":{
+                            if(u.getStatus().name().equals(value1)&&u.getDate().before(before)&&u.getDate().after(after))map.add(new String(u.getIpAdress()));
+                            break;
+                        }
+                    }
+                }
+                break;
+            }
+            case "user":{
+                for (ParserLogMethodAndUsers.User u:listUsers) {
+                    switch (field2){
+                        case"ip":{
+                            if(u.getIpAdress().equals(value1)&&u.getDate().before(before)&&u.getDate().after(after))map.add(new String(u.getUserName()));
+                            break;
+                        }
+                        case "date":{
+                            SimpleDateFormat dateFormat=new SimpleDateFormat();
+                            dateFormat.applyPattern("dd.MM.yyyy HH:mm:ss");
+                            Date dat = null;
+                            try {
+                                dat = dateFormat.parse(value1);
+                            } catch (ParseException e) {}
+                            if(u.getDate().equals(dat)&&u.getDate().before(before)&&u.getDate().after(after))map.add(new String(u.getUserName()));
+                            break;
+                        }
+                        case "event":{
+                            if(u.getEvent().name().equals(value1)&&u.getDate().before(before)&&u.getDate().after(after))map.add(new String(u.getUserName()));
+                            break;
+                        }
+                        case "status":{
+                            if(u.getStatus().name().equals(value1)&&u.getDate().before(before)&&u.getDate().after(after))map.add(new String(u.getUserName()));
+                            break;
+                        }
+                    }
+                }
+                break;
+            }
+            case "date":{
+                for (ParserLogMethodAndUsers.User u:listUsers) {
+                    switch (field2){
+                        case"ip":{
+                            if(u.getIpAdress().equals(value1)&&u.getDate().before(before)&&u.getDate().after(after))map.add(u.getDate());
+                            break;
+                        }
+                        case "user":{
+                            if(u.getUserName().equals(value1)&&u.getDate().before(before)&&u.getDate().after(after))map.add(u.getDate());
+                            break;
+                        }
+                        case "event":{
+                            if(u.getEvent().name().equals(value1)&&u.getDate().before(before)&&u.getDate().after(after))map.add(u.getDate());
+                            break;
+                        }
+                        case "status":{
+                            if(u.getStatus().name().equals(value1)&&u.getDate().before(before)&&u.getDate().after(after))map.add(u.getDate());
+                            break;
+                        }
+                    }
+                }
+                break;
+            }
+            case "event":{
+                for (ParserLogMethodAndUsers.User u:listUsers) {
+                    switch (field2){
+                        case"ip":{
+                            if(u.getIpAdress().equals(value1)&&u.getDate().before(before)&&u.getDate().after(after))map.add(u.getEvent());
+                            break;
+                        }
+                        case "date":{
+                            SimpleDateFormat dateFormat=new SimpleDateFormat();
+                            dateFormat.applyPattern("dd.MM.yyyy HH:mm:ss");
+                            Date dat = null;
+                            try {
+                                dat = dateFormat.parse(value1);
+                            } catch (ParseException e) {}
+                            if(u.getDate().equals(dat)&&u.getDate().before(before)&&u.getDate().after(after))map.add(u.getEvent());
+                            break;
+                        }
+                        case "user":{
+                            if(u.getUserName().equals(value1)&&u.getDate().before(before)&&u.getDate().after(after))map.add(u.getEvent());
+                            break;
+                        }
+                        case "status":{
+                            if(u.getStatus().name().equals(value1)&&u.getDate().before(before)&&u.getDate().after(after))map.add(u.getEvent());
+                            break;
+                        }
+                    }
+                }
+                break;
+            }
+            case "status":{
+                for (ParserLogMethodAndUsers.User u:listUsers) {
+                    switch (field2){
+                        case"ip":{
+                            if(u.getIpAdress().equals(value1)&&u.getDate().before(before)&&u.getDate().after(after))map.add(u.getStatus());
+                            break;
+                        }
+                        case "date":{
+                            SimpleDateFormat dateFormat=new SimpleDateFormat();
+                            dateFormat.applyPattern("dd.MM.yyyy HH:mm:ss");
+                            Date dat = null;
+                            try {
+                                dat = dateFormat.parse(value1);
+                            } catch (ParseException e) {}
+                            if(u.getDate().equals(dat)&&u.getDate().before(before)&&u.getDate().after(after))map.add(u.getStatus());
+                            break;
+                        }
+                        case "user":{
+                            if(u.getUserName().equals(value1)&&u.getDate().before(before)&&u.getDate().after(after))map.add(u.getStatus());
+                            break;
+                        }
+                        case "event":{
+                            if(u.getEvent().name().equals(value1)&&u.getDate().before(before)&&u.getDate().after(after))map.add(u.getStatus());
+                            break;
+                        }
+                    }
+                }
+                break;
+            }
+        }
+        return map;
+    }
     private Set<Object> getSetFinish(String field1,String field2,String value1){
         Set<Object>map=new HashSet<>();
         switch (field1){
             case "ip":{
-                for (ParserLog.User u:listUsers) {
+                for (ParserLogMethodAndUsers.User u:listUsers) {
                     switch (field2){
                         case"user":{
                             if(u.getUserName().equals(value1))map.add(new String(u.getIpAdress()));
@@ -135,7 +301,7 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
                 break;
             }
             case "user":{
-                for (ParserLog.User u:listUsers) {
+                for (ParserLogMethodAndUsers.User u:listUsers) {
                     switch (field2){
                         case"ip":{
                             if(u.getIpAdress().equals(value1))map.add(new String(u.getUserName()));
@@ -164,7 +330,7 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
                 break;
             }
             case "date":{
-                for (ParserLog.User u:listUsers) {
+                for (ParserLogMethodAndUsers.User u:listUsers) {
                     switch (field2){
                         case"ip":{
                             if(u.getIpAdress().equals(value1))map.add(u.getDate());
@@ -187,7 +353,7 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
                 break;
             }
             case "event":{
-                for (ParserLog.User u:listUsers) {
+                for (ParserLogMethodAndUsers.User u:listUsers) {
                     switch (field2){
                         case"ip":{
                             if(u.getIpAdress().equals(value1))map.add(u.getEvent());
@@ -216,7 +382,7 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
                 break;
             }
             case "status":{
-                for (ParserLog.User u:listUsers) {
+                for (ParserLogMethodAndUsers.User u:listUsers) {
                     switch (field2){
                         case"ip":{
                             if(u.getIpAdress().equals(value1))map.add(u.getStatus());
@@ -247,82 +413,6 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
         }
         return map;
     }
-    private Set<Object> getSet(String whatSend,Matcher m,String find){
-        Set<Object>map=new HashSet<>();
-        if(whatSend.equals("ip")){
-            String ip=m.group().replaceAll("\"","").trim();
-            for (ParserLog.User u:listUsers) {
-                if(u.getIpAdress().equals(ip)) {
-                    if(find.equals("ip"))map.add(new String(u.getIpAdress()));
-                    if(find.equals("user"))map.add(new String(u.getUserName()));
-                    if(find.equals("date"))map.add(u.getDate());
-                    if(find.equals("event"))map.add(u.getEvent());
-                    if(find.equals("status"))map.add(u.getStatus());
-                }
-            }
-            return map;
-        }
-        if(whatSend.equals("name")){
-            String name=m.group().replaceAll("\"","").trim();
-            for (ParserLog.User u:listUsers) {
-                if(u.getUserName().equals(name)){
-                    if(find.equals("ip"))map.add(new String(u.getIpAdress()));
-                    if(find.equals("user"))map.add(new String(u.getUserName()));
-                    if(find.equals("date"))map.add(u.getDate());
-                    if(find.equals("event"))map.add(u.getEvent());
-                    if(find.equals("status"))map.add(u.getStatus());
-                }
-            }
-            return map;
-        }
-        if(whatSend.equals("date")){
-            String date=m.group().replaceAll("\"","").trim();
-            SimpleDateFormat dateFormat=new SimpleDateFormat();
-            dateFormat.applyPattern("dd.MM.yyyy HH:mm:ss");
-            Date dat = null;
-            try {
-                dat = dateFormat.parse(date);
-            } catch (ParseException e) {}
-            for (ParserLog.User u:listUsers) {
-                if(u.getDate().equals(dat)){
-                    if(find.equals("ip"))map.add(new String(u.getIpAdress()));
-                    if(find.equals("user"))map.add(new String(u.getUserName()));
-                    if(find.equals("date"))map.add(u.getDate());
-                    if(find.equals("event"))map.add(u.getEvent());
-                    if(find.equals("status"))map.add(u.getStatus());
-                }
-            }
-            return map;
-        }
-        if(whatSend.equals("event")){
-            String event=m.group().replaceAll("\"","").trim();
-            for (ParserLog.User u:listUsers) {
-                if(u.getEvent().name().equals(event)){
-                    if(find.equals("ip"))map.add(new String(u.getIpAdress()));
-                    if(find.equals("user"))map.add(new String(u.getUserName()));
-                    if(find.equals("date"))map.add(u.getDate());
-                    if(find.equals("event"))map.add(u.getEvent());
-                    if(find.equals("status"))map.add(u.getStatus());
-                }
-            }
-            return map;
-        }
-        if(whatSend.equals("status")){
-            String status=m.group().replaceAll("\"","").trim();
-            for (ParserLog.User u:listUsers) {
-                if(u.getStatus().name().equals(status)){
-                    if(find.equals("ip"))map.add(new String(u.getIpAdress()));
-                    if(find.equals("user"))map.add(new String(u.getUserName()));
-                    if(find.equals("date"))map.add(u.getDate());
-                    if(find.equals("event"))map.add(u.getEvent());
-                    if(find.equals("status"))map.add(u.getStatus());
-                }
-            }
-            return map;
-        }
-        return map;
-    }
-
     //загружаем все строки логов из файлов в список
     private List<String> loadListOfLogsFromFiles(File entry) {
         List<String> listLogs = new ArrayList<>();
@@ -452,7 +542,7 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
     public Set<String> getAllUsers() {
         setResult=new HashSet<>();
         if(listUsers!=null&&!listUsers.isEmpty()){
-            for (ParserLog.User u:listUsers) {
+            for (ParserLogMethodAndUsers.User u:listUsers) {
                 setResult.add(u.getUserName());
             }
         }
@@ -464,12 +554,12 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
         setResult=new HashSet<>();
         if(listUsers!=null&&!listUsers.isEmpty()){
             if(after==null&&before==null) {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     setResult.add(u.getUserName());
                 }
             }
             else {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if (isDateInRange(u.getDate(), after, before)) setResult.add(u.getUserName());
                 }
             }
@@ -482,12 +572,12 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
         Set<Event>set=new HashSet<>();
         if(listUsers!=null&&!listUsers.isEmpty()){
             if(after==null&&before==null) {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if(user.equals(u.getUserName()))set.add(u.getEvent());
                 }
             }
             else {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if (user.equals(u.getUserName()) && isDateInRange(u.getDate(), after, before))
                         set.add(u.getEvent());
                 }
@@ -501,12 +591,12 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
         setResult=new HashSet<>();
         if(listUsers!=null&&!listUsers.isEmpty()){
             if(after==null&&before==null) {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if(ip.equals(u.getIpAdress()))setResult.add(u.getUserName());
                 }
             }
             else {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if (ip.equals(u.getIpAdress()) && isDateInRange(u.getDate(), after, before))
                         setResult.add(u.getUserName());
                 }
@@ -520,12 +610,12 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
         setResult=new HashSet<>();
         if(listUsers!=null&&!listUsers.isEmpty()){
             if(after==null&&before==null) {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if(u.getEvent()==Event.LOGIN)setResult.add(u.getUserName());
                 }
             }
             else {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if (u.getEvent() == Event.LOGIN && isDateInRange(u.getDate(), after, before))
                         setResult.add(u.getUserName());
                 }
@@ -539,12 +629,12 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
         setResult=new HashSet<>();
         if(listUsers!=null&&!listUsers.isEmpty()){
             if(after==null&&before==null) {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if(u.getEvent()==Event.DOWNLOAD_PLUGIN&&u.getStatus()==Status.OK)setResult.add(u.getUserName());
                 }
             }
             else {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if (u.getEvent() == Event.DOWNLOAD_PLUGIN && u.getStatus() == Status.OK && isDateInRange(u.getDate(), after, before))
                         setResult.add(u.getUserName());
                 }
@@ -558,12 +648,12 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
         setResult=new HashSet<>();
         if(listUsers!=null&&!listUsers.isEmpty()){
             if(after==null&&before==null) {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if((u.getEvent()==Event.WRITE_MESSAGE)&&(u.getStatus()==Status.OK))setResult.add(u.getUserName());
                 }
             }
             else {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if ((u.getEvent() == Event.WRITE_MESSAGE) && (u.getStatus() == Status.OK) && isDateInRange(u.getDate(), after, before))
                         setResult.add(u.getUserName());
                 }
@@ -577,12 +667,12 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
         setResult=new HashSet<>();
         if(listUsers!=null&&!listUsers.isEmpty()){
             if(after==null&&before==null) {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if(u.getEvent()==Event.SOLVE_TASK)setResult.add(u.getUserName());
                 }
             }
             else {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if (u.getEvent() == Event.SOLVE_TASK && isDateInRange(u.getDate(), after, before))
                         setResult.add(u.getUserName());
                 }
@@ -596,12 +686,12 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
         setResult=new HashSet<>();
         if(listUsers!=null&&!listUsers.isEmpty()){
             if(after==null&&before==null) {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if(u.getEvent()==Event.SOLVE_TASK&&u.getNamberTask()==task)setResult.add(u.getUserName());
                 }
             }
             else {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if (u.getEvent() == Event.SOLVE_TASK && isDateInRange(u.getDate(), after, before) && u.getNamberTask() == task)
                         setResult.add(u.getUserName());
                 }
@@ -615,12 +705,12 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
         setResult=new HashSet<>();
         if(listUsers!=null&&!listUsers.isEmpty()){
             if(after==null&&before==null) {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if(u.getEvent()==Event.DONE_TASK)setResult.add(u.getUserName());
                 }
             }
             else {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if (u.getEvent() == Event.DONE_TASK && isDateInRange(u.getDate(), after, before))
                         setResult.add(u.getUserName());
                 }
@@ -634,12 +724,12 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
         setResult=new HashSet<>();
         if(listUsers!=null&&!listUsers.isEmpty()){
             if(after==null&&before==null) {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if(u.getEvent()==Event.DONE_TASK&&u.getNamberTask()==task)setResult.add(u.getUserName());
                 }
             }
             else {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if (u.getEvent() == Event.DONE_TASK && isDateInRange(u.getDate(), after, before) && u.getNamberTask() == task)
                         setResult.add(u.getUserName());
                 }
@@ -653,12 +743,12 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
         Set<Date>result=new HashSet<>();
         if(listUsers!=null&&!listUsers.isEmpty()){
             if(after==null&&before==null) {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if(u.getEvent()==event&&u.getUserName().equals(user))result.add(u.getDate());
                 }
             }
             else {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if (u.getEvent() == event && isDateInRange(u.getDate(), after, before) && u.getUserName().equals(user))
                         result.add(u.getDate());
                 }
@@ -672,12 +762,12 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
         Set<Date>result=new HashSet<>();
         if(listUsers!=null&&!listUsers.isEmpty()){
             if(after==null&&before==null) {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if(u.getStatus()==Status.FAILED)result.add(u.getDate());
                 }
             }
             else {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if (u.getStatus() == Status.FAILED && isDateInRange(u.getDate(), after, before))
                         result.add(u.getDate());
                 }
@@ -691,12 +781,12 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
         Set<Date>result=new HashSet<>();
         if(listUsers!=null&&!listUsers.isEmpty()){
             if(after==null&&before==null) {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if(u.getStatus()==Status.ERROR)result.add(u.getDate());
                 }
             }
             else {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if (u.getStatus() == Status.ERROR && isDateInRange(u.getDate(), after, before))
                         result.add(u.getDate());
                 }
@@ -710,12 +800,12 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
         Set<Date>result=new TreeSet<>();
         if(listUsers!=null&&!listUsers.isEmpty()){
             if(after==null&&before==null) {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if(u.getUserName().equals(user)&&u.getEvent()==Event.LOGIN)result.add(u.getDate());
                 }
             }
             else {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if (u.getUserName().equals(user) && u.getEvent() == Event.LOGIN && isDateInRange(u.getDate(), after, before))
                         result.add(u.getDate());
                 }
@@ -734,12 +824,12 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
         Set<Date>result=new TreeSet<>();
         if(listUsers!=null&&!listUsers.isEmpty()){
             if(after==null&&before==null) {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if(u.getUserName().equals(user)&&u.getEvent()==Event.SOLVE_TASK&&u.getNamberTask()==task)result.add(u.getDate());
                 }
             }
             else {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if (u.getUserName().equals(user) && u.getEvent() == Event.SOLVE_TASK && isDateInRange(u.getDate(), after, before) && u.getNamberTask() == task)
                         result.add(u.getDate());
                 }
@@ -758,12 +848,12 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
         Set<Date>result=new TreeSet<>();
         if(listUsers!=null&&!listUsers.isEmpty()){
             if(after==null&&before==null) {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if(u.getUserName().equals(user)&&u.getEvent()==Event.DONE_TASK&&u.getNamberTask()==task)result.add(u.getDate());
                 }
             }
             else {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if (u.getUserName().equals(user) && u.getEvent() == Event.DONE_TASK && isDateInRange(u.getDate(), after, before) && u.getNamberTask() == task)
                         result.add(u.getDate());
                 }
@@ -782,12 +872,12 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
         Set<Date>result=new TreeSet<>();
         if(listUsers!=null&&!listUsers.isEmpty()){
             if(after==null&&before==null) {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if(u.getUserName().equals(user)&&u.getEvent()==Event.WRITE_MESSAGE)result.add(u.getDate());
                 }
             }
             else {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if (u.getUserName().equals(user) && u.getEvent() == Event.WRITE_MESSAGE && isDateInRange(u.getDate(), after, before))
                         result.add(u.getDate());
                 }
@@ -801,12 +891,12 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
         Set<Date>result=new TreeSet<>();
         if(listUsers!=null&&!listUsers.isEmpty()){
             if(after==null&&before==null) {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if(u.getUserName().equals(user)&&u.getEvent()==Event.DOWNLOAD_PLUGIN)result.add(u.getDate());
                 }
             }
             else {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if (u.getUserName().equals(user) && u.getEvent() == Event.DOWNLOAD_PLUGIN && isDateInRange(u.getDate(), after, before))
                         result.add(u.getDate());
                 }
@@ -820,12 +910,12 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
         Set<Event>set=new HashSet<>();
         if(listUsers!=null&&!listUsers.isEmpty()){
             if(after==null&&before==null) {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if(u.getEvent()!=null)set.add(u.getEvent());
                 }
             }
             else {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if (u.getEvent() != null && isDateInRange(u.getDate(), after, before)) set.add(u.getEvent());
                 }
             }
@@ -838,12 +928,12 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
         Set<Event>set=new HashSet<>();
         if(listUsers!=null&&!listUsers.isEmpty()){
             if(after==null&&before==null) {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if(u.getEvent()!=null)set.add(u.getEvent());
                 }
             }
             else {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if (u.getEvent() != null && isDateInRange(u.getDate(), after, before)) set.add(u.getEvent());
                 }
             }
@@ -856,12 +946,12 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
         Set<Event>set=new HashSet<>();
         if(listUsers!=null&&!listUsers.isEmpty()){
             if(after==null&&before==null) {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if(u.getEvent()!=null&&u.getIpAdress().equals(ip))set.add(u.getEvent());
                 }
             }
             else {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if (u.getEvent() != null && isDateInRange(u.getDate(), after, before) && u.getIpAdress().equals(ip))
                         set.add(u.getEvent());
                 }
@@ -875,12 +965,12 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
         Set<Event>set=new HashSet<>();
         if(listUsers!=null&&!listUsers.isEmpty()){
             if(after==null&&before==null) {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if(u.getEvent()!=null&&u.getUserName().equals(user))set.add(u.getEvent());
                 }
             }
             else {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if (u.getEvent() != null && isDateInRange(u.getDate(), after, before) && u.getUserName().equals(user))
                         set.add(u.getEvent());
                 }
@@ -894,12 +984,12 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
         Set<Event>set=new HashSet<>();
         if(listUsers!=null&&!listUsers.isEmpty()){
             if(after==null&&before==null) {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if(u.getEvent()!=null&&u.getStatus()==Status.FAILED)set.add(u.getEvent());
                 }
             }
             else {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if (u.getEvent() != null && isDateInRange(u.getDate(), after, before) && u.getStatus() == Status.FAILED)
                         set.add(u.getEvent());
                 }
@@ -913,12 +1003,12 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
         Set<Event>set=new HashSet<>();
         if(listUsers!=null&&!listUsers.isEmpty()){
             if(after==null&&before==null) {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if(u.getEvent()!=null&&u.getStatus()==Status.ERROR)set.add(u.getEvent());
                 }
             }
             else {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if (u.getEvent() != null && isDateInRange(u.getDate(), after, before) && u.getStatus() == Status.ERROR)
                         set.add(u.getEvent());
                 }
@@ -932,12 +1022,12 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
         int count=0;
         if(listUsers!=null&&!listUsers.isEmpty()){
             if(after==null&&before==null) {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if(u.getEvent()==Event.SOLVE_TASK&&u.getNamberTask()==task)count++;
                 }
             }
             else {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if (u.getEvent() == Event.SOLVE_TASK && u.getNamberTask() == task && isDateInRange(u.getDate(), after, before))
                         count++;
                 }
@@ -951,12 +1041,12 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
         int count=0;
         if(listUsers!=null&&!listUsers.isEmpty()){
             if(after==null&&before==null) {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if(u.getEvent()==Event.DONE_TASK&&u.getNamberTask()==task)count++;
                 }
             }
             else {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if (u.getEvent() == Event.DONE_TASK && u.getNamberTask() == task && isDateInRange(u.getDate(), after, before))
                         count++;
                 }
@@ -970,7 +1060,7 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
         Map<Integer,Integer>map=new HashMap<>();
         if(listUsers!=null&&!listUsers.isEmpty()){
             if(after==null&&before==null) {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if(u.getNamberTask()!=0&&u.getEvent()==Event.SOLVE_TASK){
                         if(map.containsKey(u.getNamberTask())){
                             map.put(u.getNamberTask(),map.get(u.getNamberTask())+1);
@@ -980,7 +1070,7 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
                 }
             }
             else {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if (u.getNamberTask() != 0 && u.getEvent() == Event.SOLVE_TASK && isDateInRange(u.getDate(), after, before)) {
                         if (map.containsKey(u.getNamberTask())) {
                             map.put(u.getNamberTask(), map.get(u.getNamberTask()) + 1);
@@ -997,7 +1087,7 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
         Map<Integer,Integer>map=new HashMap<>();
         if(listUsers!=null&&!listUsers.isEmpty()){
             if(after==null&&before==null) {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if(u.getNamberTask()!=0&&u.getEvent()==Event.DONE_TASK){
                         if(map.containsKey(u.getNamberTask())){
                             map.put(u.getNamberTask(),map.get(u.getNamberTask())+1);
@@ -1007,7 +1097,7 @@ public class LogParser implements IPQuery, UserQuery, DateQuery, EventQuery, QLQ
                 }
             }
             else {
-                for (ParserLog.User u : listUsers) {
+                for (ParserLogMethodAndUsers.User u : listUsers) {
                     if (u.getNamberTask() != 0 && u.getEvent() == Event.DONE_TASK && isDateInRange(u.getDate(), after, before)) {
                         if (map.containsKey(u.getNamberTask())) {
                             map.put(u.getNamberTask(), map.get(u.getNamberTask()) + 1);
