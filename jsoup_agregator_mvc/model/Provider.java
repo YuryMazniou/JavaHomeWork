@@ -1,6 +1,7 @@
 package by.it.mazniou.jsoup_agregator.model;
 
-import com.javarush.task.task28.task2810.vo.Vacancy;
+
+import by.it.mazniou.jsoup_agregator.vo.Vacancy;
 
 import java.util.List;
 

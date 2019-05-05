@@ -1,6 +1,7 @@
 package by.it.mazniou.jsoup_agregator;
 
-import com.javarush.task.task28.task2810.model.Model;
+
+import by.it.mazniou.jsoup_agregator.model.Model;
 
 public class Controller {
     private Model model;
