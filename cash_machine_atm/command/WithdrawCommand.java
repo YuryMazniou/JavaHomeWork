@@ -1,45 +1,53 @@
 package by.it.mazniou.cash_machine_atm.command;
 
-import com.javarush.task.task26.task2613.ConsoleHelper;
-import com.javarush.task.task26.task2613.CurrencyManipulator;
-import com.javarush.task.task26.task2613.CurrencyManipulatorFactory;
-import com.javarush.task.task26.task2613.exception.InterruptOperationException;
-import com.javarush.task.task26.task2613.exception.NotEnoughMoneyException;
+import by.it.mazniou.cash_machine_atm.CashMachine;
+import by.it.mazniou.cash_machine_atm.ConsoleHelper;
+import by.it.mazniou.cash_machine_atm.CurrencyManipulator;
+import by.it.mazniou.cash_machine_atm.CurrencyManipulatorFactory;
+import by.it.mazniou.cash_machine_atm.exception.InterruptOperationException;
+import by.it.mazniou.cash_machine_atm.exception.NotEnoughMoneyException;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.*;
 
 class WithdrawCommand implements Command {
-    private Pattern pattern=Pattern.compile("^\\d+$");
+    //private Pattern pattern=Pattern.compile("^\\d+$");
+    private ResourceBundle res=PropertyResourceBundle.getBundle(CashMachine.RESOURCE_PATH+"withdraw_en");
     @Override
     public void execute() throws InterruptOperationException {
+        ConsoleHelper.writeMessage(res.getString("before"));//
         String currencyCode= ConsoleHelper.askCurrencyCode();
         CurrencyManipulator manipulator= CurrencyManipulatorFactory.getManipulatorByCurrencyCode(currencyCode);
+        int sum;
         while (true){
-            ConsoleHelper.writeMessage("Please, enter the amount to issue");
-            String amount=ConsoleHelper.readString();
-            Matcher m=pattern.matcher(amount);
-            if(m.find()){
-                if(manipulator.isAmountAvailable(Integer.parseInt(amount))){
-                    try {
-                        Map<Integer, Integer> withdrawAmount=manipulator.withdrawAmount(Integer.parseInt(amount));
-                        List<Integer> listWithDrawAmount=new ArrayList<>(withdrawAmount.keySet());
-                        Collections.sort(listWithDrawAmount);
-                        Collections.reverse(listWithDrawAmount);
-                        for (Integer i:listWithDrawAmount) {
-                            ConsoleHelper.writeMessage(String.format("\t%d - %d",i,withdrawAmount.get(i)));
-                        }
-                        ConsoleHelper.writeMessage("the transaction was successful");
-                    } catch (NotEnoughMoneyException e) {
-                        ConsoleHelper.writeMessage("There are not enough banknotes to issue");
-                    }
-                }
+            ConsoleHelper.writeMessage(res.getString("specify.amount"));
+            String s = ConsoleHelper.readString();
+            try
+            {
+                sum = Integer.parseInt(s);
+            } catch (NumberFormatException e)
+            {
+                continue;
             }
-            else ConsoleHelper.writeMessage("Error when entering amount!!!");
+            if (sum <= 0)
+            {
+                ConsoleHelper.writeMessage(res.getString("specify.not.empty.amount"));
+                continue;
+            }
+            if (!manipulator.isAmountAvailable(sum))
+            {
+                ConsoleHelper.writeMessage(res.getString("not.enough.money"));
+                continue;
+            }
+            try
+            {
+                manipulator.withdrawAmount(sum);
+            } catch (NotEnoughMoneyException e)
+            {
+                ConsoleHelper.writeMessage(res.getString("exact.amount.not.available"));
+                continue;
+            }
+            ConsoleHelper.writeMessage(String.format(res.getString("success.format"), sum, currencyCode));
+            break;
         }
     }
 }
