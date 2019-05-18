@@ -1,4 +1,4 @@
-package by.it.mazniou.sokoban.model;
+package by.it.mazniou.sokoban_game.model;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -31,6 +31,7 @@ public class GameObjects {
     public Player getPlayer() {
         return player;
     }
+
     public Set<GameObject> getAll(){
         Set<GameObject>set=new HashSet<>();
         if(walls!=null)set.addAll(walls);

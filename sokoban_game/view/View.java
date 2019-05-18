@@ -1,8 +1,9 @@
-package by.it.mazniou.sokoban.view;
+package by.it.mazniou.sokoban_game.view;
 
-import com.javarush.task.task34.task3410.controller.Controller;
-import com.javarush.task.task34.task3410.controller.EventListener;
-import com.javarush.task.task34.task3410.model.GameObjects;
+
+import by.it.mazniou.sokoban_game.controller.Controller;
+import by.it.mazniou.sokoban_game.controller.EventListener;
+import by.it.mazniou.sokoban_game.model.GameObjects;
 
 import javax.swing.*;
 

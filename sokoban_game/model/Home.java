@@ -1,10 +1,10 @@
-package by.it.mazniou.sokoban.model;
+package by.it.mazniou.sokoban_game.model;
 
 import java.awt.*;
 
 public class Home extends GameObject {
     public Home(int x, int y) {
-        super(x, y,2,2);
+        super(x, y,4,4);
     }
 
     @Override

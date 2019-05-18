@@ -1,4 +1,4 @@
-package by.it.mazniou.sokoban.model;
+package by.it.mazniou.sokoban_game.model;
 
 import java.awt.*;
 

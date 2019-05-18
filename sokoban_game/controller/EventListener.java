@@ -1,6 +1,7 @@
-package by.it.mazniou.sokoban.controller;
+package by.it.mazniou.sokoban_game.controller;
 
-import com.javarush.task.task34.task3410.model.Direction;
+
+import by.it.mazniou.sokoban_game.model.Direction;
 
 public interface EventListener {
     void move(Direction direction);//передвинуть объект в определенном направлении.

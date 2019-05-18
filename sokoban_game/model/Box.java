@@ -1,4 +1,4 @@
-package by.it.mazniou.sokoban.model;
+package by.it.mazniou.sokoban_game.model;
 
 import java.awt.*;
 
@@ -9,7 +9,7 @@ public class Box extends CollisionObject implements Movable {
 
     @Override
     public void draw(Graphics graphics) {
-        graphics.setColor(Color.ORANGE);
+        graphics.setColor(Color.GREEN);
         graphics.fillRect(getX(),getY(),Model.FIELD_CELL_SIZE,Model.FIELD_CELL_SIZE);
     }
 

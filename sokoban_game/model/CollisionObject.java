@@ -1,4 +1,4 @@
-package by.it.mazniou.sokoban.model;
+package by.it.mazniou.sokoban_game.model;
 
 public abstract class CollisionObject extends GameObject {
     public CollisionObject(int x, int y) {

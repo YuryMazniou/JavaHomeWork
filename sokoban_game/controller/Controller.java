@@ -1,9 +1,10 @@
-package by.it.mazniou.sokoban.controller;
+package by.it.mazniou.sokoban_game.controller;
 
-import com.javarush.task.task34.task3410.model.Direction;
-import com.javarush.task.task34.task3410.model.GameObjects;
-import com.javarush.task.task34.task3410.model.Model;
-import com.javarush.task.task34.task3410.view.View;
+
+import by.it.mazniou.sokoban_game.model.Direction;
+import by.it.mazniou.sokoban_game.model.GameObjects;
+import by.it.mazniou.sokoban_game.model.Model;
+import by.it.mazniou.sokoban_game.view.View;
 
 public class Controller implements EventListener {
     private View view;
@@ -11,12 +12,11 @@ public class Controller implements EventListener {
 
     public Controller() {
         view=new View(this);
-        view.setEventListener(this);
         model=new Model();
-        model.setEventListener(this);
         model.restart();
         view.init();
-        //view.update();
+        view.setEventListener(this);
+        model.setEventListener(this);
     }
     public GameObjects getGameObjects(){
         return model.getGameObjects();
